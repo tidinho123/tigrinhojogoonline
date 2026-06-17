@@ -106,7 +106,8 @@ function MascotBadge({ size = 96 }: { size?: number }) {
 /* ---------- Landing ---------- */
 
 function Landing({ onStart }: { onStart: () => void }) {
-  const [count] = useState(() => 820 + Math.floor(Math.random() * 60));
+  const [count, setCount] = useState(847);
+  useEffect(() => { setCount(820 + Math.floor(Math.random() * 60)); }, []);
   return (
     <div className="flex flex-1 items-center">
       <Card className="w-full">
