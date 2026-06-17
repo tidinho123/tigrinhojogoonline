@@ -15,11 +15,17 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "landing" | "register" | "success" | "game" | "win" | "withdraw" | "multicaixa" | "iban";
+type Step = "landing" | "register" | "success" | "game" | "win" | "withdraw" | "multicaixa" | "iban" | "verifying" | "verified" | "video";
 
 function Index() {
   const [step, setStep] = useState<Step>("landing");
   const [winnings, setWinnings] = useState(0);
+  const [method, setMethod] = useState<{ type: "iban" | "multicaixa"; value: string }>({ type: "multicaixa", value: "" });
+
+  const startVerify = (type: "iban" | "multicaixa", value: string) => {
+    setMethod({ type, value });
+    setStep("verifying");
+  };
 
   return (
     <div
@@ -44,8 +50,11 @@ function Index() {
             onMulticaixa={() => setStep("multicaixa")}
           />
         )}
-        {step === "multicaixa" && <Multicaixa onBack={() => setStep("withdraw")} />}
-        {step === "iban" && <Iban onBack={() => setStep("withdraw")} />}
+        {step === "multicaixa" && <Multicaixa onBack={() => setStep("withdraw")} onConfirm={(v) => startVerify("multicaixa", v)} />}
+        {step === "iban" && <Iban onBack={() => setStep("withdraw")} onConfirm={(v) => startVerify("iban", v)} />}
+        {step === "verifying" && <Verifying onDone={() => setStep("verified")} />}
+        {step === "verified" && <Verified amount={winnings} method={method} onContinue={() => setStep("video")} />}
+        {step === "video" && <VideoStep />}
       </div>
     </div>
   );
