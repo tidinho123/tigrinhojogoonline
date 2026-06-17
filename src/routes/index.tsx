@@ -506,9 +506,8 @@ function MethodCard({
 
 /* ---------- Multicaixa / Iban ---------- */
 
-function Multicaixa({ onBack }: { onBack: () => void }) {
+function Multicaixa({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string) => void }) {
   const [phone, setPhone] = useState("");
-  const [sent, setSent] = useState(false);
   return (
     <div className="flex flex-1 items-center">
       <Card className="w-full">
@@ -524,51 +523,125 @@ function Multicaixa({ onBack }: { onBack: () => void }) {
         />
         <div className="mt-5">
           <button
-            onClick={() => setSent(true)}
+            onClick={() => phone && onConfirm(phone)}
             className="w-full rounded-2xl bg-gold-bright px-6 py-4 text-base font-bold text-black"
           >
             ✅ Confirmar Levantamento
           </button>
         </div>
-        {sent && (
-          <p className="mt-4 text-center text-sm text-success">
-            Pedido enviado! Receberá uma notificação no Multicaixa Express em instantes.
-          </p>
-        )}
       </Card>
     </div>
   );
 }
 
-function Iban({ onBack }: { onBack: () => void }) {
+function Iban({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string) => void }) {
   const [iban, setIban] = useState("");
-  const [sent, setSent] = useState(false);
   return (
     <div className="flex flex-1 items-center">
       <Card className="w-full">
         <button onClick={onBack} className="text-sm text-muted-foreground">← Voltar</button>
-        <h2 className="mt-2 text-2xl font-extrabold">Transferência IBAN</h2>
-        <label className="mt-5 block text-sm font-semibold text-success">IBAN</label>
+        <h2 className="mt-2 text-2xl font-extrabold">IBAN</h2>
+        <label className="mt-5 block text-sm font-semibold text-success">Número IBAN</label>
         <input
           value={iban}
           onChange={(e) => setIban(e.target.value)}
-          placeholder="AO06 0000 0000 0000 0000 0000 0"
+          placeholder="AO06 XXXX XXXX XXXX XXXX"
           className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
         />
         <div className="mt-5">
           <button
-            onClick={() => setSent(true)}
+            onClick={() => iban && onConfirm(iban)}
             className="w-full rounded-2xl bg-gold-bright px-6 py-4 text-base font-bold text-black"
           >
             ✅ Confirmar Levantamento
           </button>
         </div>
-        {sent && (
-          <p className="mt-4 text-center text-sm text-success">
-            Pedido enviado! A transferência será processada para o IBAN indicado.
-          </p>
-        )}
       </Card>
+    </div>
+  );
+}
+
+/* ---------- Verifying / Verified / Video ---------- */
+
+function Verifying({ onDone }: { onDone: () => void }) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const duration = 3200;
+    const id = window.setInterval(() => {
+      const p = Math.min(100, ((Date.now() - start) / duration) * 100);
+      setProgress(p);
+      if (p >= 100) {
+        clearInterval(id);
+        setTimeout(onDone, 250);
+      }
+    }, 60);
+    return () => clearInterval(id);
+  }, [onDone]);
+
+  return (
+    <div className="flex flex-1 items-center justify-center -mx-4 -my-6 bg-background/80 px-4">
+      <div className="w-full max-w-sm text-center">
+        <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-muted border-t-foreground" />
+        <h2 className="mt-6 text-2xl font-extrabold">Verificando seus dados</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Por favor aguarde...</p>
+        <div className="mx-auto mt-6 h-2 w-2/3 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-foreground transition-[width]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Verified({
+  amount,
+  method,
+  onContinue,
+}: {
+  amount: number;
+  method: { type: "iban" | "multicaixa"; value: string };
+  onContinue: () => void;
+}) {
+  return (
+    <div className="flex flex-1 items-center">
+      <Card className="w-full text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/20 ring-2 ring-success">
+          <svg viewBox="0 0 24 24" className="h-8 w-8 stroke-success" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12l5 5L20 7" />
+          </svg>
+        </div>
+        <h2 className="mt-4 text-xl font-extrabold text-success">Dados verificados com sucesso</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Os seus dados foram validados</p>
+        <p className="mt-4 text-sm text-muted-foreground">Total disponível para levantamento</p>
+        <div className="mt-1 text-3xl font-extrabold text-gold">{amount.toLocaleString("pt-PT")} Kz</div>
+        <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+          <span className="text-gold">{method.type === "multicaixa" ? "📱" : "🏛"}</span>
+          <span className="text-muted-foreground">
+            {method.type === "multicaixa" ? "Multicaixa Express:" : "IBAN:"}{" "}
+            <span className="font-bold text-foreground">{method.value}</span>
+          </span>
+        </div>
+        <div className="mt-5">
+          <PrimaryButton onClick={onContinue}>💰 Levantar meus ganhos agora</PrimaryButton>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function VideoStep() {
+  return (
+    <div className="flex flex-1 flex-col">
+      <div className="rounded-3xl border border-border bg-card p-5">
+        <h2 className="text-xl font-extrabold text-gold">🎉 Assista para receber seus ganhos</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Veja o vídeo abaixo para finalizar o seu levantamento
+        </p>
+        <div className="mt-5 aspect-[9/16] w-full overflow-hidden rounded-2xl bg-black/60" />
+      </div>
     </div>
   );
 }
