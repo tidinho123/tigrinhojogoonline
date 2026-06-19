@@ -633,14 +633,45 @@ function Verified({
 }
 
 function VideoStep() {
+  useEffect(() => {
+    const s = document.createElement("script");
+    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s.async = true;
+    document.head.appendChild(s);
+    return () => {
+      document.head.removeChild(s);
+    };
+  }, []);
+
+  const iframeSrc = useMemo(() => {
+    if (typeof window === "undefined") return "about:blank";
+    const search = window.location.search || "?";
+    const href = window.location.href;
+    return `https://scripts.converteai.net/eb443a8a-8ff9-48b7-9a4e-bce3bd2a155f/players/6a347d168f1548dc77054231/v4/embed.html${search}&vl=${encodeURIComponent(href)}`;
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-xl font-extrabold text-gold">🎉 Assista para receber seus ganhos</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <h2 className="text-xl font-extrabold text-gold text-center">🎉 Assista para receber seus ganhos</h2>
+        <p className="mt-2 text-sm text-muted-foreground text-center">
           Veja o vídeo abaixo para finalizar o seu levantamento
         </p>
-        <div className="mt-5 aspect-[9/16] w-full overflow-hidden rounded-2xl bg-black/60" />
+        
+        <div className="mt-5">
+          <div id="ifr_6a347d168f1548dc77054231_wrapper" style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}>
+            <div style={{ position: "relative", padding: "176.47058823529412% 0 0 0" }} id="ifr_6a347d168f1548dc77054231_aspect">
+              <iframe
+                frameBorder="0"
+                allowFullScreen
+                src={iframeSrc}
+                id="ifr_6a347d168f1548dc77054231"
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                referrerPolicy="origin"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
