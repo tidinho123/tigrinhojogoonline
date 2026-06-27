@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "landing" | "register" | "success" | "game" | "win" | "withdraw" | "multicaixa" | "iban" | "verifying" | "verified" | "video";
+type Step = "landing" | "register" | "success" | "game" | "win" | "withdraw" | "multicaixa" | "iban" | "verifying" | "verified" | "processing" | "blocked" | "tutorial" | "video";
 
 function Index() {
   const [step, setStep] = useState<Step>("landing");
