@@ -268,7 +268,7 @@ function Success({ onPlay }: { onPlay: () => void }) {
 
 /* ---------- Game (slot) ---------- */
 
-const SYMBOLS = ["🎆", "💰", "💎", "🐯", "🏮", "🔔", "🧧", "👘"];
+const SYMBOLS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const TICKER = "🐯 Ganhe grandes prémios! 🏛 Multiplicadores até 2500x 💰 Fortune Tiger - O jogo mais quente!";
 
 function Game({ onFinish }: { onFinish: (amount: number) => void }) {
