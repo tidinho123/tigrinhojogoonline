@@ -279,6 +279,7 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
   const [grid, setGrid] = useState<string[]>(() => Array(9).fill("🎆"));
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<null | { win: boolean; amount: number }>(null);
+  const spinRef = useRef<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const getCtx = () => {
