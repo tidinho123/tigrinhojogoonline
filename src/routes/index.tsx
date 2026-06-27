@@ -279,29 +279,49 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
   const [grid, setGrid] = useState<string[]>(() => Array(9).fill("🎆"));
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<null | { win: boolean; amount: number }>(null);
-  const [notifs, setNotifs] = useState<{ id: number; win: boolean; user: string; amount: number }[]>([]);
-  const spinRef = useRef<number | null>(null);
-  const notifId = useRef(0);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const pushNotif = (win: boolean, user: string, amount: number) => {
-    const id = ++notifId.current;
-    setNotifs((n) => [...n, { id, win, user, amount }]);
-    setTimeout(() => setNotifs((n) => n.filter((x) => x.id !== id)), 4200);
+  const getCtx = () => {
+    if (typeof window === "undefined") return null;
+    if (!audioCtxRef.current) {
+      const AC = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+      audioCtxRef.current = new AC();
+    }
+    return audioCtxRef.current;
   };
 
-  // Fake live notifications from other players
-  useEffect(() => {
-    const users = ["@maria_f", "@joao_k", "@ana_l", "@carlos_m", "@sofia_d", "@pedro_a", "@bruna_r", "@tiago_n"];
-    const id = window.setInterval(() => {
-      const win = Math.random() < 0.7;
-      const user = users[Math.floor(Math.random() * users.length)];
-      const amount = win
-        ? Math.floor(8000 + Math.random() * 110000)
-        : Math.floor(1000 + Math.random() * 5000);
-      pushNotif(win, user, amount);
-    }, 3800);
-    return () => clearInterval(id);
-  }, []);
+  const playWinSound = () => {
+    const ctx = getCtx(); if (!ctx) return;
+    const now = ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, now + i * 0.09);
+      g.gain.setValueAtTime(0.0001, now + i * 0.09);
+      g.gain.exponentialRampToValueAtTime(0.25, now + i * 0.09 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.28);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + i * 0.09); o.stop(now + i * 0.09 + 0.3);
+    });
+  };
+
+  const playLoseSound = () => {
+    const ctx = getCtx(); if (!ctx) return;
+    const now = ctx.currentTime;
+    [392, 311.13, 233.08].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(f, now + i * 0.14);
+      g.gain.setValueAtTime(0.0001, now + i * 0.14);
+      g.gain.exponentialRampToValueAtTime(0.18, now + i * 0.14 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.14 + 0.35);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + i * 0.14); o.stop(now + i * 0.14 + 0.4);
+    });
+  };
+
 
   const max = 10;
   const remaining = max - rounds;
