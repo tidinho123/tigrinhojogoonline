@@ -365,7 +365,7 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
     setRounds((r) => r + 1);
     setResult({ win: isWin, amount });
     setSpinning(false);
-    pushNotif(isWin, "Você", isWin ? amount : bet);
+    if (isWin) playWinSound(); else playLoseSound();
   };
 
   return (
