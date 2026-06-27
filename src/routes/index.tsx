@@ -370,32 +370,7 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <div className="pointer-events-none fixed inset-x-0 top-3 z-50 mx-auto flex max-w-md flex-col items-center gap-2 px-3">
-        {notifs.map((n) => (
-          <div
-            key={n.id}
-            className={`pointer-events-none w-full max-w-xs rounded-xl border px-3 py-2 text-sm shadow-card backdrop-blur-md animate-[slideIn_.3s_ease-out] ${
-              n.win
-                ? "border-success/40 bg-success/15 text-success"
-                : "border-danger/40 bg-danger/15 text-danger"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{n.win ? "🎉" : "💸"}</span>
-              <div className="flex-1 leading-tight">
-                <div className="font-bold">
-                  {n.user} {n.win ? "ganhou" : "perdeu"}
-                </div>
-                <div className="text-xs opacity-90">
-                  {n.win ? "+" : "-"}
-                  {n.amount.toLocaleString("pt-PT")} Kz
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <style>{`@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
 
       <div className="flex items-center justify-between gap-3 pt-2">
         <Stat label="RODADAS" value={`${rounds}/10`} />
