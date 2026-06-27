@@ -628,7 +628,7 @@ function Verifying({ onDone }: { onDone: () => void }) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     const start = Date.now();
-    const duration = 3200;
+    const duration = 10000;
     const id = window.setInterval(() => {
       const p = Math.min(100, ((Date.now() - start) / duration) * 100);
       setProgress(p);
@@ -707,7 +707,7 @@ function Processing({
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     const start = Date.now();
-    const duration = 4200;
+    const duration = 10000;
     const id = window.setInterval(() => {
       const p = Math.min(100, ((Date.now() - start) / duration) * 100);
       setProgress(p);
