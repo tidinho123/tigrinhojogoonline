@@ -279,10 +279,33 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
   const [grid, setGrid] = useState<string[]>(() => Array(9).fill("🎆"));
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<null | { win: boolean; amount: number }>(null);
+  const [notifs, setNotifs] = useState<{ id: number; win: boolean; user: string; amount: number }[]>([]);
   const spinRef = useRef<number | null>(null);
+  const notifId = useRef(0);
+
+  const pushNotif = (win: boolean, user: string, amount: number) => {
+    const id = ++notifId.current;
+    setNotifs((n) => [...n, { id, win, user, amount }]);
+    setTimeout(() => setNotifs((n) => n.filter((x) => x.id !== id)), 4200);
+  };
+
+  // Fake live notifications from other players
+  useEffect(() => {
+    const users = ["@maria_f", "@joao_k", "@ana_l", "@carlos_m", "@sofia_d", "@pedro_a", "@bruna_r", "@tiago_n"];
+    const id = window.setInterval(() => {
+      const win = Math.random() < 0.7;
+      const user = users[Math.floor(Math.random() * users.length)];
+      const amount = win
+        ? Math.floor(8000 + Math.random() * 110000)
+        : Math.floor(1000 + Math.random() * 5000);
+      pushNotif(win, user, amount);
+    }, 3800);
+    return () => clearInterval(id);
+  }, []);
 
   const max = 10;
   const remaining = max - rounds;
+
 
   useEffect(() => {
     if (rounds >= max) {
