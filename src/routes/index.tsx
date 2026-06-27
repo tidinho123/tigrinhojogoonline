@@ -586,21 +586,31 @@ function Multicaixa({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: 
 
 function Iban({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string) => void }) {
   const [iban, setIban] = useState("");
+  const [holder, setHolder] = useState("");
   return (
     <div className="flex flex-1 items-center">
       <Card className="w-full">
         <button onClick={onBack} className="text-sm text-muted-foreground">← Voltar</button>
         <h2 className="mt-2 text-2xl font-extrabold">IBAN</h2>
-        <label className="mt-5 block text-sm font-semibold text-success">Número IBAN</label>
+
+        <label className="mt-5 block text-sm font-semibold text-success">Nome do Titular</label>
+        <input
+          value={holder}
+          onChange={(e) => setHolder(e.target.value)}
+          placeholder="João Manuel da Silva"
+          className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
+        />
+
+        <label className="mt-4 block text-sm font-semibold text-success">Número IBAN</label>
         <input
           value={iban}
           onChange={(e) => setIban(e.target.value)}
-          placeholder="AO06 XXXX XXXX XXXX XXXX"
+          placeholder="AO06 0040 0000 1234 5678 9012 3"
           className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
         />
         <div className="mt-5">
           <button
-            onClick={() => iban && onConfirm(iban)}
+            onClick={() => iban && holder && onConfirm(`${holder} · ${iban}`)}
             className="w-full rounded-2xl bg-gold-bright px-6 py-4 text-base font-bold text-black"
           >
             ✅ Confirmar Levantamento
@@ -610,6 +620,7 @@ function Iban({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string
     </div>
   );
 }
+
 
 /* ---------- Verifying / Verified / Video ---------- */
 
