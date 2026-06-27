@@ -53,7 +53,10 @@ function Index() {
         {step === "multicaixa" && <Multicaixa onBack={() => setStep("withdraw")} onConfirm={(v) => startVerify("multicaixa", v)} />}
         {step === "iban" && <Iban onBack={() => setStep("withdraw")} onConfirm={(v) => startVerify("iban", v)} />}
         {step === "verifying" && <Verifying onDone={() => setStep("verified")} />}
-        {step === "verified" && <Verified amount={winnings} method={method} onContinue={() => setStep("video")} />}
+        {step === "verified" && <Verified amount={winnings} method={method} onContinue={() => setStep("processing")} />}
+        {step === "processing" && <Processing method={method} amount={winnings} onDone={() => setStep("blocked")} />}
+        {step === "blocked" && <Blocked amount={winnings} method={method} onContinue={() => setStep("tutorial")} />}
+        {step === "tutorial" && <Tutorial onContinue={() => setStep("video")} />}
         {step === "video" && <VideoStep />}
       </div>
     </div>
