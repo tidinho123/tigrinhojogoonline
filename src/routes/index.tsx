@@ -557,6 +557,17 @@ function MethodCard({
 
 function Multicaixa({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string) => void }) {
   const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const digits = phone.replace(/\D/g, "");
+  const valid = digits.length === 9 && /^9\d{8}$/.test(digits);
+  const submit = () => {
+    if (!valid) {
+      setError("Número inválido. Deve conter 9 dígitos e começar por 9 (terminal de Angola).");
+      return;
+    }
+    setError("");
+    onConfirm(digits);
+  };
   return (
     <div className="flex flex-1 items-center">
       <Card className="w-full">
@@ -565,14 +576,17 @@ function Multicaixa({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: 
         <label className="mt-5 block text-sm font-semibold text-success">Número de Telefone</label>
         <input
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={(e) => { setPhone(e.target.value); setError(""); }}
           placeholder="9XX XXX XXX"
           inputMode="tel"
+          maxLength={12}
           className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
         />
+        <p className="mt-1 text-xs text-muted-foreground">9 dígitos · começa por 9</p>
+        {error && <p className="mt-2 text-xs font-semibold text-danger">{error}</p>}
         <div className="mt-5">
           <button
-            onClick={() => phone && onConfirm(phone)}
+            onClick={submit}
             className="w-full rounded-2xl bg-gold-bright px-6 py-4 text-base font-bold text-black"
           >
             ✅ Confirmar Levantamento
