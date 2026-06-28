@@ -600,6 +600,21 @@ function Multicaixa({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: 
 function Iban({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string) => void }) {
   const [iban, setIban] = useState("");
   const [holder, setHolder] = useState("");
+  const [error, setError] = useState("");
+  const holderLetters = holder.replace(/[^A-Za-zÀ-ÿ]/g, "");
+  const ibanDigits = iban.replace(/\s/g, "");
+  const submit = () => {
+    if (holderLetters.length <= 4) {
+      setError("Insira o nome completo do titular (mais de 4 letras).");
+      return;
+    }
+    if (ibanDigits.length < 21) {
+      setError("IBAN inválido. Verifique e tente novamente.");
+      return;
+    }
+    setError("");
+    onConfirm(`${holder.trim()} · ${ibanDigits}`);
+  };
   return (
     <div className="flex flex-1 items-center">
       <Card className="w-full">
@@ -609,21 +624,23 @@ function Iban({ onBack, onConfirm }: { onBack: () => void; onConfirm: (v: string
         <label className="mt-5 block text-sm font-semibold text-success">Nome do Titular</label>
         <input
           value={holder}
-          onChange={(e) => setHolder(e.target.value)}
+          onChange={(e) => { setHolder(e.target.value); setError(""); }}
           placeholder="João Manuel da Silva"
           className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
         />
+        <p className="mt-1 text-xs text-muted-foreground">Nome completo (mais de 4 letras)</p>
 
         <label className="mt-4 block text-sm font-semibold text-success">Número IBAN</label>
         <input
           value={iban}
-          onChange={(e) => setIban(e.target.value)}
+          onChange={(e) => { setIban(e.target.value); setError(""); }}
           placeholder="AO06 0040 0000 1234 5678 9012 3"
           className="mt-2 w-full rounded-2xl border border-border bg-input/50 px-4 py-4 outline-none focus:border-gold"
         />
+        {error && <p className="mt-2 text-xs font-semibold text-danger">{error}</p>}
         <div className="mt-5">
           <button
-            onClick={() => iban && holder && onConfirm(`${holder} · ${iban}`)}
+            onClick={submit}
             className="w-full rounded-2xl bg-gold-bright px-6 py-4 text-base font-bold text-black"
           >
             ✅ Confirmar Levantamento
