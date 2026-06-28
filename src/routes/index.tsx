@@ -355,8 +355,7 @@ function Game({ onFinish }: { onFinish: (amount: number) => void }) {
     const isWin = Math.random() < 0.7;
     const final = Array.from({ length: 9 }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
     if (isWin) {
-      const sym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-      final[1] = sym; final[4] = sym; final[7] = sym;
+      final[1] = "🐯"; final[4] = "🐯"; final[7] = "🐯";
     }
     setGrid(final);
     const amount = isWin ? Math.floor(8000 + Math.random() * 18000) : 0;
