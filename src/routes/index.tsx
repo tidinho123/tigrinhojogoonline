@@ -907,7 +907,7 @@ function VideoStep() {
     if (typeof window === "undefined") return "about:blank";
     const search = window.location.search || "?";
     const href = window.location.href;
-    return `https://scripts.converteai.net/eb443a8a-8ff9-48b7-9a4e-bce3bd2a155f/players/6a347d168f1548dc77054231/v4/embed.html${search}&vl=${encodeURIComponent(href)}`;
+    return `https://scripts.converteai.net/220eed4f-7bc0-4763-844a-46ae45601574/players/6a430148c58118255800e063/v4/embed.html${search}&vl=${encodeURIComponent(href)}`;
   }, []);
 
   return (
@@ -919,13 +919,13 @@ function VideoStep() {
         </p>
         
         <div className="mt-5">
-          <div id="ifr_6a347d168f1548dc77054231_wrapper" style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}>
-            <div style={{ position: "relative", padding: "176.47058823529412% 0 0 0" }} id="ifr_6a347d168f1548dc77054231_aspect">
+          <div id="ifr_6a430148c58118255800e063_wrapper" style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}>
+            <div style={{ position: "relative", padding: "176.47058823529412% 0 0 0" }} id="ifr_6a430148c58118255800e063_aspect">
               <iframe
                 frameBorder="0"
                 allowFullScreen
                 src={iframeSrc}
-                id="ifr_6a347d168f1548dc77054231"
+                id="ifr_6a430148c58118255800e063"
                 style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
                 referrerPolicy="origin"
               />
