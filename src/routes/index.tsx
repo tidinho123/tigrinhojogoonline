@@ -109,50 +109,50 @@ function MascotBadge({ size = 96 }: { size?: number }) {
 /* ---------- Landing ---------- */
 
 function Landing({ onStart }: { onStart: () => void }) {
-  const [count, setCount] = useState(847);
-  useEffect(() => { setCount(820 + Math.floor(Math.random() * 60)); }, []);
+  useEffect(() => {
+    const s = document.createElement("script");
+    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s.async = true;
+    document.head.appendChild(s);
+    return () => { document.head.removeChild(s); };
+  }, []);
+
+  const iframeSrc = useMemo(() => {
+    if (typeof window === "undefined") return "about:blank";
+    const search = window.location.search || "?";
+    const href = window.location.href;
+    return `https://scripts.converteai.net/220eed4f-7bc0-4763-844a-46ae45601574/players/6a4301a5d6699b59ae99e4da/v4/embed.html${search}&vl=${encodeURIComponent(href)}`;
+  }, []);
+
   return (
-    <div className="flex flex-1 items-center">
+    <div className="flex flex-1 flex-col">
       <Card className="w-full">
         <MascotBadge />
-        <h1 className="mt-5 text-center text-3xl font-extrabold tracking-wide text-gold">
-          PARABÉNS!
+        <h1 className="mt-5 text-center text-2xl font-extrabold tracking-wide text-gold">
+          Assista ao vídeo
         </h1>
-        <p className="mt-2 text-center text-base font-semibold">Foste selecionado!</p>
-        <p className="mt-1 text-center text-sm text-muted-foreground">
-          Recebe <span className="font-bold text-success">10 jogadas grátis</span> no Fortune Tiger
+        <p className="mt-2 text-center text-sm text-muted-foreground">
+          Veja como funciona e clique em <span className="font-bold text-gold">Jogar</span> ao terminar
         </p>
 
-        <div className="mt-5 flex items-center justify-center gap-2 rounded-full border border-success/40 bg-success/10 px-4 py-2 text-sm">
-          <span className="dot-pulse inline-block h-2.5 w-2.5 rounded-full bg-success" />
-          <span>
-            <span className="font-bold text-success">{count} pessoas</span> já levantaram os ganhos hoje
-          </span>
-        </div>
-
-        <div className="mt-6 text-center">
-          <div className="flex items-center justify-center gap-2 text-2xl font-extrabold text-success">
-            <span>🎆</span>
-            <span>10 Jogadas Grátis</span>
+        <div className="mt-5">
+          <div id="ifr_6a4301a5d6699b59ae99e4da_wrapper" style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}>
+            <div style={{ position: "relative", padding: "178.21782178217822% 0 0 0" }} id="ifr_6a4301a5d6699b59ae99e4da_aspect">
+              <iframe
+                frameBorder="0"
+                allowFullScreen
+                src={iframeSrc}
+                id="ifr_6a4301a5d6699b59ae99e4da"
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                referrerPolicy="origin"
+              />
+            </div>
           </div>
-          <p className="mt-1 text-sm text-gold">
-            Aposta de <span className="font-bold">1.000 Kz</span> por jogada · Ganhos reais
-          </p>
         </div>
-
-        <ul className="mt-5 space-y-2 text-sm">
-          <li className="flex items-center gap-3">✅ <span>Jogue e acumule ganhos reais</span></li>
-          <li className="flex items-center gap-3">✅ <span>Multiplicadores até 2500x</span></li>
-          <li className="flex items-center gap-3">✅ <span>Levante via IBAN ou Multicaixa</span></li>
-        </ul>
 
         <div className="mt-6">
-          <PrimaryButton onClick={onStart}>🐯 Começar a Jogar Agora</PrimaryButton>
+          <PrimaryButton onClick={onStart}>🐯 Jogar</PrimaryButton>
         </div>
-
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          ⏰ Oferta expira em breve · Vagas limitadas
-        </p>
       </Card>
     </div>
   );
